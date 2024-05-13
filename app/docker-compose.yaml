@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  ###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:16-alpine
+    env_file:
+      - ./.env.data
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/postgresql/data:rw
+    restart: always
+  ###< doctrine/doctrine-bundle ###
+
+  app:
+    image: e-commerce-server:latest
+    ports:
+      - "8080:80"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8
+    depends_on:
+      - database
+
+volumes:
+  ###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###
