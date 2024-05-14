@@ -73,6 +73,30 @@ class AuthController extends AbstractController
     }
 
     /**
+     * Create token with id of user
+     *
+     * @param int $id
+     * @return string
+     */
+    public function createToken(int $id): string
+    {
+        $header = [
+            'alg' => 'HS256',
+            'typ' => 'JWT',
+        ];
+        $payload = [
+            'sub' => $id,
+            'iat' => time(),
+            'exp' => time() + 86400,
+        ];
+        $base64Header = base64_encode(json_encode($header));
+        $base64Payload = base64_encode(json_encode($payload));
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
+        $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        return $base64Header . "." . $base64Payload . "." . $base64Signature;
+    }
+
+    /**
      * Connexion d'un utilisateur.
      */
     #[Route('/login', name: 'app_authentification_login', methods: ['GET','POST'])]
@@ -89,16 +113,18 @@ class AuthController extends AbstractController
             return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_BAD_REQUEST);
         }
 
-        $token = $this->JWTManager->create($user);
+        $token = $this->createToken($user->getId());
+
         $session->set('user_id', $user->getId());
         $session->set('token', $token);
 
-        if ($this->tokenStorageInterface->getToken()) {
-            $decodedJWTToken = $this->JWTManager->decode($this->tokenStorageInterface->getToken());
-            return new JsonResponse(['email' => $user->getLogin(), 'token' => $decodedJWTToken], Response::HTTP_OK);
+
+        $decodedToken = $this->decodeToken($token);
+        if ($decodedToken === null) {
+            return new JsonResponse(['error' => 'Invalid token'], Response::HTTP_BAD_REQUEST);
         }
-        
-        return new JsonResponse(['error' => 'No token found'], Response::HTTP_UNAUTHORIZED);
+
+        return new JsonResponse(['token' => $token], Response::HTTP_OK);
     }
 
     /**
@@ -178,6 +204,37 @@ class AuthController extends AbstractController
 
         return $this->json($responseData, Response::HTTP_OK);
     }
+
+
+    /**
+     * Verify token
+     *
+     * @param string $token
+     * @return User|null
+     */
+    private function decodeToken(string $token): ?array
+    {
+        $tokenParts = explode(".", $token);
+        $base64Header = $tokenParts[0];
+        $base64Payload = $tokenParts[1];
+        $base64Signature = $tokenParts[2];
+
+        $header = json_decode(base64_decode(strtr($base64Header, '-_', '+/')), true);
+        $payload = json_decode(base64_decode(strtr($base64Payload, '-_', '+/')), true);
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
+        $base64SignatureDecoded = base64_decode(strtr($base64Signature, '-_', '+/'));
+
+        if ($signature !== $base64SignatureDecoded) {
+            return null;
+        }
+
+        return [
+            'header' => $header,
+            'payload' => $payload,
+        ];
+    }
+
+
 
 
     /**

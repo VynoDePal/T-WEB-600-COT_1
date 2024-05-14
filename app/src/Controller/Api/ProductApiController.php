@@ -66,7 +66,7 @@ class ProductApiController extends AbstractController
     /**
      * Création d'un nouveau produit
      */
-    #[Route('/api/product', name: 'api_add_product', methods: ['GET','POST'])]
+    #[Route('/api/products', name: 'api_add_product', methods: ['GET','POST'])]
     #[OA\Tag(name: 'Products')]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(ref: new Model(type: ProductType::class)))]
     #[OA\Response(response: 201, description: 'Returns the created product')]

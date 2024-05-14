@@ -48,11 +48,19 @@ export default function Register() {
         window.location.href = "./Login";
       })
       .catch((error) => {
-        console.error("Registration failed:", error.response);
-        if (error.response && error.response.errors) {
-          alert("Erreur: " + JSON.stringify(error.response));
+        if (error.response) {
+          console.error("Login failed:", error.response);
+          const errorMessage = "Erreur: " + error.response.data.message;
+          alert(errorMessage);
+        } else if (error.request) {
+          console.error("Login failed:", error.request);
+          const errorMessage =
+            "Erreur: La requête a été faite mais aucune réponse n'a été reçue.";
+          alert(errorMessage);
         } else {
-          alert("Une erreur s'est produite. Veuillez réessayer.");
+          console.error("Login failed:", error.message);
+          const errorMessage = "Erreur: " + error.message;
+          alert(errorMessage);
         }
       });
   };

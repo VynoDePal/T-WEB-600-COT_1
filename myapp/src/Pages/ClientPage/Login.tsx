@@ -19,7 +19,7 @@ export default function Login() {
     e.preventDefault();
     console.log(formData);
     axios
-      .post("http://127.0.0.1:8000/api/login", formData)
+      .post("http://localhost:8000/api/login", formData)
       .then((response) => {
         if (response) {
           alert("Login success:" + response);
