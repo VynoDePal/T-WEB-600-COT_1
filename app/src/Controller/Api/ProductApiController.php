@@ -76,49 +76,54 @@ class ProductApiController extends AbstractController
     #[OA\Security(name: "CSRF")]
     public function addProduct(Request $request, StripeService $stripeService, NormalizerInterface $normalizer, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $userRepository): Response
     {
+        $data = json_decode($request->getContent(), true);
+
         /**
          * Récupération de l'id de l'utilisateur connecté depuis la session
          */
         $userId = $session->get('user');
         $user = $userRepository->find($userId);
 
-        if (!$user) {
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
                 'error' => 'User not found'
             ], 401);
         }
 
         $product = new Product();
-        $form = $this->createForm(ProductType::class, $product);
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            /**
-             * Persistance de l'entité produit dans la base de données
-             */
-            $entityManager->persist($product);
-            $entityManager->flush();
+        $product->setName($data['name']);
+        $product->setDescription($data['description']);
+        $product->setPhoto($data['photo']);
+        $product->setPrice($data['price']);
+        $product->setIsAvailable($data['isAvailable']);
 
-            /**
-             * Création du produit Stripe
-             */
-            $stripeProduct = $stripeService->createProduct($product);
-            $product->setStripeProductId($stripeProduct->id);
+        /**
+         * Persistance de l'entité produit dans la base de données
+         */
+        $entityManager->persist($product);
+        $entityManager->flush();
 
-            /**
-             * Création du prix Stripe
-             */
-            $stripePrice = $stripeService->createPrice($product);
-            $product->setStripePriceId($stripePrice->id);
+        /**
+         * Création du produit Stripe
+         */
+        $stripeProduct = $stripeService->createProduct($product);
+        $product->setStripeProductId($stripeProduct->id);
 
-            /**
-             * Mise à jour de l'entité produit dans la base de données
-             */
-            $entityManager->persist($product);
-            $entityManager->flush();
+        /**
+         * Création du prix Stripe
+         */
+        $stripePrice = $stripeService->createPrice($product);
+        $product->setStripePriceId($stripePrice->id);
 
-            return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED);
-        }
-        return $this->render('product/product.html.twig', ['form' => $form]);
+        /**
+         * Mise à jour de l'entité produit dans la base de données
+         */
+        $entityManager->persist($product);
+        $entityManager->flush();
+
+        return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED, [], JSON_PRETTY_PRINT);
     }
 
     /**
@@ -132,14 +137,17 @@ class ProductApiController extends AbstractController
     #[OA\Security(name: 'Bearer')]
     public function modifyProduct(Request $request, ProductRepository $productRepository, ProductType $productType, NormalizerInterface $normalizer, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
+        $data = json_decode($request->getContent(), true);
         $user = $session->get('user');
-        if (!$user) {
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
                 'error' => 'User not found'
-            ], Response::HTTP_UNAUTHORIZED);
+            ], 401);
         }
 
-        $product = $productRepository->find($id);
+        $product = $entityManager->getRepository(Product::class)->find($id);
 
         if (!$product) {
             return $this->json([
@@ -147,17 +155,34 @@ class ProductApiController extends AbstractController
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $form = $this->createForm(ProductType::class, $product);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($product);
-            $entityManager->flush();
-
-            return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_OK);
+        if (isset($data['name'])) {
+            $product->setName($data['name']);
+        }
+        if (isset($data['description'])) {
+            $product->setDescription($data['description']);
+        }
+        if (isset($data['photo'])) {
+            $product->setPhoto($data['photo']);
+        }
+        if (isset($data['price'])) {
+            $product->setPrice($data['price']);
+        }
+        if (isset($data['isAvailable'])) {
+            $product->setIsAvailable($data['isAvailable']);
         }
 
-        return $this->render('product/product.html.twig', ['form' => $form]);
+        $entityManager->flush();
+
+        $responseData = [
+            'id' => $product->getId(),
+            'name' => $product->getName(),
+            'description' => $product->getDescription(),
+            'photo' => $product->getPhoto(),
+            'price' => $product->getPrice(),
+            'isAvailable' => $product->isAvailable(),
+        ];
+
+        return $this->json($responseData, Response::HTTP_OK);
     }
 
     /**

@@ -115,14 +115,10 @@ class AuthController extends AbstractController
 
         $token = $this->createToken($user->getId());
 
-        $session->set('user_id', $user->getId());
+        $session->set('user', $user->getId());
         $session->set('token', $token);
 
-
-        $decodedToken = $this->decodeToken($token);
-        if ($decodedToken === null) {
-            return new JsonResponse(['error' => 'Invalid token'], Response::HTTP_BAD_REQUEST);
-        }
+        // $decodedToken = $this->decodeToken($token);
 
         return new JsonResponse(['token' => $token], Response::HTTP_OK);
     }

@@ -29,6 +29,6 @@ RUN chown -R www-data:www-data /var/www/app && \
 
 RUN chmod +x /var/www/app/docker.sh
 
-ENTRYPOINT ["/bin/bash", "/var/www/app/docker.sh"]
+ENTRYPOINT ["/bin/bash", "docker.sh"]
 
 EXPOSE 80
