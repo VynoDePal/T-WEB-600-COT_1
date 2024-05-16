@@ -78,13 +78,13 @@ class ProductApiController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $token = $session->get('token');
+        // $token = $session->get('token');
 
-        if (!$token) {
-            return $this->json([
-                'error' => 'User not found'
-            ], 401);
-        }
+        // if (!$token) {
+        //     return $this->json([
+        //         'error' => 'User not found'
+        //     ], 401);
+        // }
 
         $product = new Product();
         $product->setName($data['name']);
@@ -135,13 +135,13 @@ class ProductApiController extends AbstractController
         // $userId = $session->get('user');
         // $user = $userRepository->find($userId);
 
-        $token = $session->get('token');
+        // $token = $session->get('token');
 
-        if (!$token) {
-            return $this->json([
-                'error' => 'User not found'
-            ], 401);
-        }
+        // if (!$token) {
+        //     return $this->json([
+        //         'error' => 'User not found'
+        //     ], 401);
+        // }
 
         $product = $entityManager->getRepository(Product::class)->find($id);
 
@@ -193,13 +193,13 @@ class ProductApiController extends AbstractController
         // $userId = $session->get('user');
         // $user = $userRepository->find($userId);
 
-        $token = $session->get('token');
+        // $token = $session->get('token');
 
-        if (!$token) {
-            return $this->json([
-                'error' => 'User not found'
-            ], 401);
-        }
+        // if (!$token) {
+        //     return $this->json([
+        //         'error' => 'User not found'
+        //     ], 401);
+        // }
 
         $product = $productRepository->find($id);
 

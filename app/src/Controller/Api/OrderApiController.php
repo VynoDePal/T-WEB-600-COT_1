@@ -34,16 +34,16 @@ class OrderApiController extends AbstractController
         /**
          * Trouve l'utilisateur actuel en fonction de sa session
          */
-        $userId = $session->get('user');
-        $user = $userRepository->find($userId);
+        // $userId = $session->get('user');
+        // $user = $userRepository->find($userId);
 
-        $token = $session->get('token');
+        // $token = $session->get('token');
 
-        if (!$user || !$token) {
-            return $this->json([
-                'error' => 'User not found'
-            ], 401);
-        }
+        // if (!$user || !$token) {
+        //     return $this->json([
+        //         'error' => 'User not found'
+        //     ], 401);
+        // }
 
         /**
          * Recherche toutes les commandes de l'utilisateur actuel
