@@ -177,11 +177,20 @@ class AuthController extends AbstractController
     #[Route('/api/users', name: 'app_authentification_display_user_informations', methods: ['GET'])]
     #[OA\Tag(name: 'Users')]
     #[OA\Response(response: 200, description: 'Returns the current user informations')]
-    public function displayUserInformations(SessionInterface $session, UserRepository $userRepository, SerializerInterface $serializer): Response
+    public function displayUserInformations(Request $request, SessionInterface $session, UserRepository $userRepository, SerializerInterface $serializer): Response
     {
-        $token = $session->get('token');
+        $authHeader = $request->headers->get('Authorization');
+        $token = preg_replace('/^Bearer\s/', '', $authHeader);
+        
         $userId = $this->decodeToken($token);
+        if (!$userId) {
+            return new JsonResponse(['error' => 'Invalid token'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $user = $userRepository->find($userId);
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
 
         $userWithoutPassword = new class {
             public string $id;
@@ -212,11 +221,25 @@ class AuthController extends AbstractController
     private function decodeToken(string $token): ?int
     {
         $tokenParts = explode(".", $token);
+        if (count($tokenParts) !== 3) {
+            return null;
+        }
+        $base64Header = $tokenParts[0];
         $base64Payload = $tokenParts[1];
+        $signature = $tokenParts[2];
+
+        $header = json_decode(base64_decode(strtr($base64Header, '-_', '+/')), true);
+        if (!isset($header['alg']) || $header['alg'] !== 'HS256') {
+            return null;
+        }
 
         $payload = json_decode(base64_decode(strtr($base64Payload, '-_', '+/')), true);
-
         if (!isset($payload['sub'])) {
+            return null;
+        }
+
+        $expectedSignature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
+        if (!hash_equals(strtr(base64_encode($expectedSignature), '+/', '-_'), $signature)) {
             return null;
         }
 

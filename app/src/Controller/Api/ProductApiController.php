@@ -78,12 +78,6 @@ class ProductApiController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        /**
-         * Récupération de l'id de l'utilisateur connecté depuis la session
-         */
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
-
         $token = $session->get('token');
 
         if (!$token) {
@@ -95,7 +89,7 @@ class ProductApiController extends AbstractController
         $product = new Product();
         $product->setName($data['name']);
         $product->setDescription($data['description']);
-        $product->setPhoto($data['photo']);
+        $product->setPhotoName($data['photoName']);
         $product->setPrice($data['price']);
         $product->setIsAvailable($data['isAvailable']);
 
