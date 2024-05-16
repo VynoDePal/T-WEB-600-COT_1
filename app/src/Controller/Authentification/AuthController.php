@@ -115,7 +115,7 @@ class AuthController extends AbstractController
 
         $token = $this->createToken($user->getId());
 
-        $session->set('user', $user->getId());
+        // $session->set('user', $user->getId());
         $session->set('token', $token);
 
         // $decodedToken = $this->decodeToken($token);
@@ -179,7 +179,8 @@ class AuthController extends AbstractController
     #[OA\Response(response: 200, description: 'Returns the current user informations')]
     public function displayUserInformations(SessionInterface $session, UserRepository $userRepository, SerializerInterface $serializer): Response
     {
-        $userId = $session->get('user');
+        $token = $session->get('token');
+        $userId = $this->decodeToken($token);
         $user = $userRepository->find($userId);
 
         $userWithoutPassword = new class {
@@ -208,26 +209,18 @@ class AuthController extends AbstractController
      * @param string $token
      * @return User|null
      */
-    private function decodeToken(string $token): ?array
+    private function decodeToken(string $token): ?int
     {
         $tokenParts = explode(".", $token);
-        $base64Header = $tokenParts[0];
         $base64Payload = $tokenParts[1];
-        $base64Signature = $tokenParts[2];
 
-        $header = json_decode(base64_decode(strtr($base64Header, '-_', '+/')), true);
         $payload = json_decode(base64_decode(strtr($base64Payload, '-_', '+/')), true);
-        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
-        $base64SignatureDecoded = base64_decode(strtr($base64Signature, '-_', '+/'));
 
-        if ($signature !== $base64SignatureDecoded) {
+        if (!isset($payload['sub'])) {
             return null;
         }
 
-        return [
-            'header' => $header,
-            'payload' => $payload,
-        ];
+        return $payload['sub'];
     }
 
 

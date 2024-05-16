@@ -1,12 +1,12 @@
 doctrine:
   dbal:
-    driver: "pdo_pgsql"
-    server_version: "16"
-    charset: utf8mb4
-    default_table_options:
-      charset: utf8mb4
-      collate: utf8mb4_unicode_ci
-
+    url: "%env(resolve:DATABASE_URL)%"
+    # driver: "pdo_pgsql"
+    # server_version: "16"
+    # charset: utf8mb4
+    # default_table_options:
+    #   charset: utf8mb4
+    #   collate: utf8mb4_unicode_ci
     profiling_collect_backtrace: "%kernel.debug%"
     use_savepoints: true
   orm:

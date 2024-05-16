@@ -81,12 +81,12 @@ class ProductApiController extends AbstractController
         /**
          * Récupération de l'id de l'utilisateur connecté depuis la session
          */
-        $userId = $session->get('user');
-        $user = $userRepository->find($userId);
+        // $userId = $session->get('user');
+        // $user = $userRepository->find($userId);
 
         $token = $session->get('token');
 
-        if (!$user || !$token) {
+        if (!$token) {
             return $this->json([
                 'error' => 'User not found'
             ], 401);
@@ -138,12 +138,12 @@ class ProductApiController extends AbstractController
     public function modifyProduct(Request $request, ProductRepository $productRepository, ProductType $productType, NormalizerInterface $normalizer, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
-        $userId = $session->get('user');
-        $user = $userRepository->find($userId);
+        // $userId = $session->get('user');
+        // $user = $userRepository->find($userId);
 
         $token = $session->get('token');
 
-        if (!$user || !$token) {
+        if (!$token) {
             return $this->json([
                 'error' => 'User not found'
             ], 401);
@@ -196,12 +196,12 @@ class ProductApiController extends AbstractController
     #[OA\Security(name: 'Bearer')]
     public function deleteProduct(Request $request, ProductRepository $productRepository, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
-        $userId = $session->get('user');
-        $user = $userRepository->find($userId);
+        // $userId = $session->get('user');
+        // $user = $userRepository->find($userId);
 
         $token = $session->get('token');
 
-        if (!$user || !$token) {
+        if (!$token) {
             return $this->json([
                 'error' => 'User not found'
             ], 401);
