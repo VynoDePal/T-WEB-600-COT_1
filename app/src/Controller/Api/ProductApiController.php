@@ -138,7 +138,9 @@ class ProductApiController extends AbstractController
     public function modifyProduct(Request $request, ProductRepository $productRepository, ProductType $productType, NormalizerInterface $normalizer, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
-        $user = $session->get('user');
+        $userId = $session->get('user');
+        $user = $userRepository->find($userId);
+
         $token = $session->get('token');
 
         if (!$user || !$token) {
@@ -194,11 +196,15 @@ class ProductApiController extends AbstractController
     #[OA\Security(name: 'Bearer')]
     public function deleteProduct(Request $request, ProductRepository $productRepository, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
-        $user = $session->get('user');
-        if (!$user) {
+        $userId = $session->get('user');
+        $user = $userRepository->find($userId);
+
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
                 'error' => 'User not found'
-            ], Response::HTTP_UNAUTHORIZED);
+            ], 401);
         }
 
         $product = $productRepository->find($id);

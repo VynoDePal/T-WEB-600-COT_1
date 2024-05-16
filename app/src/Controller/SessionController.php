@@ -56,11 +56,15 @@ class SessionController extends AbstractController
     #[OA\Response(response: 404, description: 'Product or cart not found')]
     public function addItemToShoppingCart(SessionInterface $session, int $id): Response
     {
-        $user = $session->get('user');
-        if (!$user) {
+        $userId = $session->get('user');
+        $user = $userRepository->find($userId);
+
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
                 'error' => 'User not found'
-            ], Response::HTTP_UNAUTHORIZED);
+            ], 401);
         }
         /**
          * Recherche d'un produit par son numéro d'identification à l'aide de ManagerRegistry
@@ -90,11 +94,15 @@ class SessionController extends AbstractController
     #[OA\Response(response: 404, description: 'Product or cart not found')]
     public function removeItemFromShoppingCart(SessionInterface $session, int $id): Response
     {
-        $user = $session->get('user');
-        if (!$user) {
+        $userId = $session->get('user');
+        $user = $userRepository->find($userId);
+
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
                 'error' => 'User not found'
-            ], Response::HTTP_UNAUTHORIZED);
+            ], 401);
         }
 
         $product = $this->doctrine->getRepository(Product::class)->find($id);

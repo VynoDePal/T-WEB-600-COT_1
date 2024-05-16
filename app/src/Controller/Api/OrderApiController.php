@@ -34,16 +34,15 @@ class OrderApiController extends AbstractController
         /**
          * Trouve l'utilisateur actuel en fonction de sa session
          */
-        $userLogged = $session->get('user');
+        $userId = $session->get('user');
+        $user = $userRepository->find($userId);
 
-        /**
-         * If the user is not found, return a 404 status code
-         * and an "Unauthorized" message
-         */
-        if (!$userLogged) {
+        $token = $session->get('token');
+
+        if (!$user || !$token) {
             return $this->json([
-                'message' => 'User not found',
-            ], 404);
+                'error' => 'User not found'
+            ], 401);
         }
 
         /**
