@@ -73,52 +73,27 @@ class AuthController extends AbstractController
     }
 
     /**
-     * Create token with id of user
-     *
-     * @param int $id
-     * @return string
-     */
-    public function createToken(int $id): string
-    {
-        $header = [
-            'alg' => 'HS256',
-            'typ' => 'JWT',
-        ];
-        $payload = [
-            'sub' => $id,
-            'iat' => time(),
-            'exp' => time() + 86400,
-        ];
-        $base64Header = base64_encode(json_encode($header));
-        $base64Payload = base64_encode(json_encode($payload));
-        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
-        $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-        return $base64Header . "." . $base64Payload . "." . $base64Signature;
-    }
-
-    /**
      * Connexion d'un utilisateur.
      */
     #[Route('/login', name: 'app_authentification_login', methods: ['GET','POST'])]
     #[OA\Tag(name: 'Users')]
     #[OA\Response(response: 200, description: 'Return user login')]
     #[OA\Response(response: 400, description: 'Invalid data')]
-    public function login(Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $passwordHasher, SessionInterface $session): JsonResponse
+    public function loginCheck(Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $passwordHasher, JWTTokenManagerInterface $JWTManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         $user = $manager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        // echo $user;
+        
+        $id = $user->getId();
+        echo $id;
 
         if (!$user || !$passwordHasher->isPasswordValid($user, $data['password'])) {
             return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_BAD_REQUEST);
         }
 
-        $token = $this->createToken($user->getId());
-
-        // $session->set('user', $user->getId());
-        $session->set('token', $token);
-
-        // $decodedToken = $this->decodeToken($token);
+        $token = $this->JWTManager->create($user);
 
         return new JsonResponse(['token' => $token], Response::HTTP_OK);
     }
@@ -210,44 +185,6 @@ class AuthController extends AbstractController
 
         return $this->json($responseData, Response::HTTP_OK);
     }
-
-
-    /**
-     * Verify token
-     *
-     * @param string $token
-     * @return User|null
-     */
-    private function decodeToken(string $token): ?int
-    {
-        $tokenParts = explode(".", $token);
-        if (count($tokenParts) !== 3) {
-            return null;
-        }
-        $base64Header = $tokenParts[0];
-        $base64Payload = $tokenParts[1];
-        $signature = $tokenParts[2];
-
-        $header = json_decode(base64_decode(strtr($base64Header, '-_', '+/')), true);
-        if (!isset($header['alg']) || $header['alg'] !== 'HS256') {
-            return null;
-        }
-
-        $payload = json_decode(base64_decode(strtr($base64Payload, '-_', '+/')), true);
-        if (!isset($payload['sub'])) {
-            return null;
-        }
-
-        $expectedSignature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
-        if (!hash_equals(strtr(base64_encode($expectedSignature), '+/', '-_'), $signature)) {
-            return null;
-        }
-
-        return $payload['sub'];
-    }
-
-
-
 
     /**
      * Affiche la page d'accueil.

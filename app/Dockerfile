@@ -1,36 +1,50 @@
+# Utiliser l'image officielle PHP avec Apache
 FROM php:8.3-apache
 
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+# Définir les variables d'environnement requises par Apache
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_LOCK_DIR /var/lock/apache2
+ENV APACHE_PID_FILE /var/run/apache2/apache2.pid
+ENV APACHE_RUN_DIR /var/run/apache2
 
-RUN install-php-extensions pdo_pgsql intl
+# Créer les répertoires nécessaires
+RUN mkdir -p ${APACHE_RUN_DIR} ${APACHE_LOCK_DIR} ${APACHE_LOG_DIR}
 
-RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
-    mv composer.phar /usr/local/bin/composer
+# Installer les dépendances nécessaires
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    git \
+    unzip \
+    && docker-php-ext-install pdo pdo_pgsql
 
-RUN apt update && apt install -yqq nodejs npm
-
-WORKDIR /var/www
-
-COPY . /var/www
-
-COPY ./apache.conf /etc/apache2/sites-available/000-default.conf
-
-RUN curl -sS https://get.symfony.com/cli/installer | bash && \
-    mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+# Installer Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN cd /var/www && \
-    composer install && \
-    npm install --force
+# Configurer Apache
+RUN a2enmod rewrite
 
-RUN chown -R www-data:www-data /var/www && \
-    chmod -R 755 /var/www
+# Copier les fichiers de l'application
+COPY . /var/www/html
 
-RUN chmod +x /var/www/docker.sh
+COPY ./apache.conf /etc/apache2/sites-available/000-default.conf
 
-ENTRYPOINT ["/bin/bash", "docker.sh"]
+# Configurer les permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
-CMD ["apache2-foreground"]
+# Installer les dépendances Symfony
+RUN cd /var/www/html \
+    && composer install
 
+# Ajouter ServerName pour éviter l'avertissement
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Commande pour démarrer Apache
+CMD ["apache2", "-D", "FOREGROUND"]
+
+# Exposer le port 80
 EXPOSE 80

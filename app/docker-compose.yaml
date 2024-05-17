@@ -1,26 +1,27 @@
 version: "3"
 
 services:
-  database:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: e_commerce
-    volumes:
-      - database_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  symfony:
+  web:
     build: .
+    container_name: symfony_web
     ports:
       - "8080:80"
     volumes:
-      - ./:/var/www/
+      - .:/var/www/html
     depends_on:
       - database
+    restart: always
+
+  database:
+    image: postgres:latest
+    container_name: symfony_database
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@database:5432/e_commerce?serverVersion=16&charset=utf8
+      POSTGRES_DB: symfony
+      POSTGRES_USER: symfony
+      POSTGRES_PASSWORD: symfony
+    volumes:
+      - database:/var/lib/postgresql/data:rw
+    restart: always
 
 volumes:
-  database_data:
+  database:
