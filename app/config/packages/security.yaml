@@ -21,26 +21,27 @@ security:
 
     login:
       pattern: ^/api/login
-      stateless: true
+      # stateless: true # Disabled because of a bug in lexik_jwt_authentication
       provider: app_user_provider
       json_login:
-        username_path: email
         check_path: /api/login_check
+        username_path: email
+        password_path: password
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
     api:
       pattern: ^/api
-      stateless: true
-      provider: app_user_provider
+      # stateless: true # Commented out because of a bug in lexik_jwt_authentication
       jwt: ~
+      provider: app_user_provider
 
     # main:
     #   anonymous: true
 
     main:
       lazy: true
-      provider: app_user_provider
+      provider: users_in_memory
 
     # activate different ways to authenticate
     # https://symfony.com/doc/current/security.html#the-firewall

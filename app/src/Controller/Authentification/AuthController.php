@@ -79,21 +79,26 @@ class AuthController extends AbstractController
     #[OA\Tag(name: 'Users')]
     #[OA\Response(response: 200, description: 'Return user login')]
     #[OA\Response(response: 400, description: 'Invalid data')]
-    public function loginCheck(Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $passwordHasher, JWTTokenManagerInterface $JWTManager): JsonResponse
+    public function loginCheck(Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $passwordHasher, JWTTokenManagerInterface $JWTManager, SessionInterface $session): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         $user = $manager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
-        // echo $user;
+        // // echo $user;
         
-        $id = $user->getId();
-        echo $id;
+        // $id = $user->getId();
+        // echo $id;
+
+        // $token = $session->get('_security_login');
+        // echo $token;
 
         if (!$user || !$passwordHasher->isPasswordValid($user, $data['password'])) {
             return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_BAD_REQUEST);
         }
 
         $token = $this->JWTManager->create($user);
+
+        // $getToken = $session->get('_security_login');
 
         return new JsonResponse(['token' => $token], Response::HTTP_OK);
     }
