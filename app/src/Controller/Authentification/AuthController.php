@@ -2,6 +2,7 @@
 
 namespace App\Controller\Authentification;
 
+use App\Service\Service;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Repository\UserRepository;
@@ -24,9 +25,11 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 class AuthController extends AbstractController
 {
     private $JWTManager;
+    private Service $service;
 
-    public function __construct(JWTTokenManagerInterface $JWTManager, TokenStorageInterface $tokenStorageInterface, UserPasswordHasherInterface $passwordHasher)
+    public function __construct(JWTTokenManagerInterface $JWTManager, TokenStorageInterface $tokenStorageInterface, UserPasswordHasherInterface $passwordHasher, Service $service)
     {
+        $this->service = $service;
         $this->JWTManager = $JWTManager;
         $this->passwordHasher = $passwordHasher;
         $this->tokenStorageInterface = $tokenStorageInterface;
@@ -72,6 +75,13 @@ class AuthController extends AbstractController
         return new JsonResponse($responseData, Response::HTTP_CREATED);
     }
 
+    #[Route('/secret', name: 'secret_key')]
+    public function showSecret(): Response
+    {
+        $secretKey = $this->service->getSecretKey();
+        return new Response('The secret key is: ' . $secretKey);
+    }
+
     /**
      * Create token with id of user
      *
@@ -80,6 +90,7 @@ class AuthController extends AbstractController
      */
     public function createToken(int $id): string
     {
+        $secretKey = $this->service->getSecretKey();
         $header = [
             'alg' => 'HS256',
             'typ' => 'JWT',
@@ -87,11 +98,11 @@ class AuthController extends AbstractController
         $payload = [
             'sub' => $id,
             'iat' => time(),
-            'exp' => time() + 86400,
+            'exp' => time() + 3600,
         ];
         $base64Header = base64_encode(json_encode($header));
         $base64Payload = base64_encode(json_encode($payload));
-        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, 'secretkey', true);
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, $secretKey, true);
         $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
         return $base64Header . "." . $base64Payload . "." . $base64Signature;
     }
@@ -113,12 +124,16 @@ class AuthController extends AbstractController
             return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_BAD_REQUEST);
         }
 
+        echo $user->getId();
+
         $token = $this->createToken($user->getId());
 
-        // $session->set('user', $user->getId());
-        $session->set('token', $token);
+        echo $token;
 
-        // $decodedToken = $this->decodeToken($token);
+        // $session->set('user', $user->getId());
+        // $session->set('token', $token);
+
+        $decodedToken = $this->decodeToken($token);
 
         return new JsonResponse(['token' => $token], Response::HTTP_OK);
     }
@@ -181,8 +196,10 @@ class AuthController extends AbstractController
     {
         $authHeader = $request->headers->get('Authorization');
         $token = preg_replace('/^Bearer\s/', '', $authHeader);
+        echo $token;
         
         $userId = $this->decodeToken($token);
+        echo $userId;
         if (!$userId) {
             return new JsonResponse(['error' => 'Invalid token'], Response::HTTP_UNAUTHORIZED);
         }
