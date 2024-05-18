@@ -6,6 +6,8 @@ services:
     container_name: symfony_web
     ports:
       - "8080:80"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@database:5432/${POSTGRES_DB:-e_commerce}
     volumes:
       - .:/var/www/html
     depends_on:
@@ -13,14 +15,15 @@ services:
     restart: always
 
   database:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: symfony_database
     environment:
-      POSTGRES_DB: symfony
-      POSTGRES_USER: symfony
-      POSTGRES_PASSWORD: symfony
+      POSTGRES_DB: ${POSTGRES_DB:-e_commerce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
     volumes:
       - database:/var/lib/postgresql/data:rw
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
 
 volumes:
