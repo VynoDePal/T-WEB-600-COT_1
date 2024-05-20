@@ -2,12 +2,15 @@
 
 namespace App\Service;
 
+use App\Service\UserService;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Entity\User;
-use App\Model\OrderItem;
 use App\Model\ShoppingCart;
 use App\Model\ShoppingCartItem;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,10 +24,12 @@ class SessionService
 
     private $requireStack;
     private $doctrine;
-    public function __construct(RequestStack $requestStack, EntityManagerInterface $doctrine)
+    private UserService $userService;
+    public function __construct(RequestStack $requestStack, EntityManagerInterface $doctrine, UserService $userService)
     {
         $this->requireStack = $requestStack;
         $this->doctrine = $doctrine;
+        $this->userService = $userService;
     }
 
     /**
@@ -95,26 +100,22 @@ class SessionService
      * 
      * @return Order|null
      */
-    public function validateShoppingCartAsOrder(SessionInterface $session): ?Order
+    public function validateShoppingCartAsOrder(SessionInterface $session, Request $request): ?Order
     {
         $shoppingCart = $this->getShoppingCart($session);
-        $userId = $this->getSession()->get('user');
+
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return new JsonResponse(['message' => 'user not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $user = $result;
 
         /**
          * Vérifie si le panier est vide ou si l'utilisateur n'existe pas
          */
-        if ($shoppingCart->items->isEmpty() || !$userId ) {
-            return null;
-        }
-
-        /**
-         * Récupère l'utilisateur correspondant à l'identifiant de session
-         * depuis la base de données
-         * @var User|null $user
-         */
-        $user = $this->doctrine->getRepository(User::class)->find($userId);
-
-        if (!$user) {
+        if ($shoppingCart->items->isEmpty() || !$user ) {
             return null;
         }
 

@@ -6,17 +6,14 @@ use App\Service\UserService;
 use App\Entity\Product;
 use App\Form\ProductType;
 use App\Repository\ProductRepository;
-use App\Repository\UserRepository;
 use App\Service\StripeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Attributes as OA;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -81,7 +78,7 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 403, description: 'User not allowed to create this product')]
     // #[OA\Security(name: "Bearer")]
-    public function addProduct(Request $request, StripeService $stripeService, NormalizerInterface $normalizer, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $userRepository): Response
+    public function addProduct(Request $request, StripeService $stripeService, NormalizerInterface $normalizer, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
 
@@ -136,7 +133,7 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 403, description: 'User not allowed to modify this product')]
     // #[OA\Security(name: 'Bearer')]
-    public function modifyProduct(Request $request, ProductRepository $productRepository, ProductType $productType, NormalizerInterface $normalizer, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
+    public function modifyProduct(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
 
@@ -193,7 +190,7 @@ class ProductApiController extends AbstractController
     #[OA\Tag(name: 'Products')]
     #[OA\Response(response: 204, description: 'Product successfully deleted')]
     // #[OA\Security(name: 'Bearer')]
-    public function deleteProduct(Request $request, ProductRepository $productRepository, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
+    public function deleteProduct(Request $request, ProductRepository $productRepository, int $id, EntityManagerInterface $entityManager): Response
     {
         // Utilisation du service pour obtenir l'utilisateur
         $result = $this->userService->getUserFromRequest($request);

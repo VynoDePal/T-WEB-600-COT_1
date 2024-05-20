@@ -4,9 +4,7 @@ namespace App\Controller;
 
 use App\Service\UserService;
 use App\Entity\Product;
-use App\Entity\Order;
 use App\Service\SessionService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,8 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Nelmio\ApiDocBundle\Annotation\Model;
-use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Attributes as OA;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -129,10 +125,14 @@ class SessionController extends AbstractController
     #[OA\Response(response: 201, description: 'Cart validated')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Cart not found')]
-    public function validateShoppingCart(RequestStack $requestStack): Response
+    public function validateShoppingCart(RequestStack $requestStack, Request $request): Response
     {
         $session = $requestStack->getSession();
-        $order = $this->sessionService->validateShoppingCartAsOrder($session);
+        /**
+         * Vérifie si le panier est vide ou si l'utilisateur n'existe pas
+         * puis le transforme en commande si tout est OK
+         */
+        $order = $this->sessionService->validateShoppingCartAsOrder($session, $request);
 
         if ($order) {
             $entityManager = $this->doctrine->getManager();
