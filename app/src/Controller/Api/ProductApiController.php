@@ -2,15 +2,16 @@
 
 namespace App\Controller\Api;
 
+use App\Service\UserService;
 use App\Entity\Product;
 use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use App\Repository\UserRepository;
 use App\Service\StripeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\FormFactory;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -18,10 +19,16 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Attributes as OA;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class ProductApiController extends AbstractController
 {
+    private UserService $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
      * Renvoie une liste de produits
      */
@@ -73,18 +80,18 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 400, description: 'Invalid data')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 403, description: 'User not allowed to create this product')]
-    #[OA\Security(name: "CSRF")]
+    // #[OA\Security(name: "Bearer")]
     public function addProduct(Request $request, StripeService $stripeService, NormalizerInterface $normalizer, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $userRepository): Response
     {
         $data = json_decode($request->getContent(), true);
 
-        // $token = $session->get('token');
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // if (!$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
 
         $product = new Product();
         $product->setName($data['name']);
@@ -117,7 +124,7 @@ class ProductApiController extends AbstractController
         $entityManager->persist($product);
         $entityManager->flush();
 
-        return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED, [], JSON_PRETTY_PRINT);
+        return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED);
     }
 
     /**
@@ -128,20 +135,18 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 200, description: 'Returns the modified product')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 403, description: 'User not allowed to modify this product')]
-    #[OA\Security(name: 'Bearer')]
+    // #[OA\Security(name: 'Bearer')]
     public function modifyProduct(Request $request, ProductRepository $productRepository, ProductType $productType, NormalizerInterface $normalizer, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
 
-        // $token = $session->get('token');
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // if (!$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
 
         $product = $entityManager->getRepository(Product::class)->find($id);
 
@@ -187,19 +192,16 @@ class ProductApiController extends AbstractController
     #[Route('/api/products/{id}', name: 'api_delete_product', methods: ['GET','DELETE'])]
     #[OA\Tag(name: 'Products')]
     #[OA\Response(response: 204, description: 'Product successfully deleted')]
-    #[OA\Security(name: 'Bearer')]
+    // #[OA\Security(name: 'Bearer')]
     public function deleteProduct(Request $request, ProductRepository $productRepository, SessionInterface $session, int $id, EntityManagerInterface $entityManager): Response
     {
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // $token = $session->get('token');
-
-        // if (!$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
 
         $product = $productRepository->find($id);
 

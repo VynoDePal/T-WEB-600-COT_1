@@ -2,12 +2,15 @@
 
 namespace App\Controller;
 
+use App\Service\UserService;
 use App\Entity\Product;
 use App\Entity\Order;
 use App\Service\SessionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -18,13 +21,18 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class SessionController extends AbstractController
 {
+    private UserService $userService;
+
     /**
      * Constructeur avec propriétés privées en lecture seule pour SessionService et ManagerRegistry
      */
     public function __construct(
         private readonly SessionService $sessionService,
-        private readonly ManagerRegistry $doctrine
-    ) {}
+        private readonly ManagerRegistry $doctrine,
+        UserService $userService
+    ) {
+        $this->userService = $userService;
+    }
 
     /**
      * Route pour l'obtention de paniers d'achat avec le paramètre SessionInterface et le type de retour Response
@@ -54,18 +62,15 @@ class SessionController extends AbstractController
     #[OA\Response(response: 201, description: 'Item added to cart')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Product or cart not found')]
-    public function addItemToShoppingCart(SessionInterface $session, int $id): Response
+    public function addItemToShoppingCart(Request $request, int $id): Response
     {
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // $token = $session->get('token');
-
-        // if (!$user || !$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
         /**
          * Recherche d'un produit par son numéro d'identification à l'aide de ManagerRegistry
          */
@@ -92,18 +97,15 @@ class SessionController extends AbstractController
     #[OA\Response(response: 200, description: 'Item removed from cart')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Product or cart not found')]
-    public function removeItemFromShoppingCart(SessionInterface $session, int $id): Response
+    public function removeItemFromShoppingCart(Request $request, int $id): Response
     {
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // $token = $session->get('token');
-
-        // if (!$user || !$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
 
         $product = $this->doctrine->getRepository(Product::class)->find($id);
 
@@ -127,7 +129,6 @@ class SessionController extends AbstractController
     #[OA\Response(response: 201, description: 'Cart validated')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Cart not found')]
-    // Dans SessionController.php
     public function validateShoppingCart(RequestStack $requestStack): Response
     {
         $session = $requestStack->getSession();

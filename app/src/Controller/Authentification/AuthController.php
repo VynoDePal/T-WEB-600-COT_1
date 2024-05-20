@@ -2,7 +2,6 @@
 
 namespace App\Controller\Authentification;
 
-use App\Service\Service;
 use App\Service\TokenService;
 use App\Service\UserService;
 use App\Entity\User;
@@ -24,14 +23,12 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[Route('/api')]
 class AuthController extends AbstractController
 {
-    private Service $service;
     private TokenService $tokenService;
     private UserService $userService;
     private UserPasswordHasherInterface $passwordHasher;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher, Service $service, TokenService $tokenService, UserService $userService)
+    public function __construct(UserPasswordHasherInterface $passwordHasher, TokenService $tokenService, UserService $userService)
     {
-        $this->service = $service;
         $this->tokenService = $tokenService;
         $this->userService = $userService;
         $this->passwordHasher = $passwordHasher;
@@ -109,7 +106,7 @@ class AuthController extends AbstractController
     #[OA\Response(response: 200, description: 'Returns the modified user')]
     #[OA\Response(response: 400, description: 'Invalid data')]
     #[OA\RequestBody(content: new Model(type: UserType::class), required: true)]
-    public function modifyUser(Request $request,UserRepository $userRepository, EntityManagerInterface $manager, SessionInterface $session): JsonResponse
+    public function modifyUser(Request $request, EntityManagerInterface $manager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 

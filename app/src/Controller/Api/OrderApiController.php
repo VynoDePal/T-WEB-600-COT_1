@@ -5,22 +5,29 @@ namespace App\Controller\Api;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Entity\User;
+use App\Service\UserService;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Attributes as OA;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OrderApiController extends AbstractController
 {
+    private UserService $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
      * Renvoie les commandes de l'utilisateur actuel
      */
@@ -29,26 +36,23 @@ class OrderApiController extends AbstractController
     #[OA\Response(response: 200, description: 'Returns all orders of the current user')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function getOrdersUser(SessionInterface $session, OrderRepository $orderRepository, NormalizerInterface $normalizer): Response
+    public function getOrdersUser(Request $request, OrderRepository $orderRepository, NormalizerInterface $normalizer): Response
     {
         /**
          * Trouve l'utilisateur actuel en fonction de sa session
          */
-        // $userId = $session->get('user');
-        // $user = $userRepository->find($userId);
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
-        // $token = $session->get('token');
-
-        // if (!$user || !$token) {
-        //     return $this->json([
-        //         'error' => 'User not found'
-        //     ], 401);
-        // }
+        $user = $result;
 
         /**
          * Recherche toutes les commandes de l'utilisateur actuel
          */
-        $orders = $orderRepository->findBy(['user' => $userLogged]);
+        $orders = $orderRepository->findBy(['user' => $user]);
 
         $ordersJson = $normalizer->normalize($orders, 'json', ['groups' => ['orders', 'product:read']]);
 
@@ -64,14 +68,20 @@ class OrderApiController extends AbstractController
     #[OA\Response(response: 200, description: 'Returns an order of the current user')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function getOrderUser(SessionInterface $session, OrderRepository $orderRepository, NormalizerInterface $normalizer, int $id): Response
+    public function getOrderUser(Request $request, OrderRepository $orderRepository, NormalizerInterface $normalizer, int $id): Response
     {
-        $userLogged = $session->get('user');
+        // Utilisation du service pour obtenir l'utilisateur
+        $result = $this->userService->getUserFromRequest($request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
+
+        $user = $result;
 
         /**
          * Recherche la commande correspondant à l'id envoyé en paramètre
          */
-        $order = $orderRepository->findOneBy(['id' => $id, 'user' => $userLogged]);
+        $order = $orderRepository->findOneBy(['id' => $id, 'user' => $user]);
 
         if (!$order) {
             return $this->json(['message' => 'Order not found'], 404);
