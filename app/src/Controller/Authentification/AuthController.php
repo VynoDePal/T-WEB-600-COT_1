@@ -73,12 +73,16 @@ class AuthController extends AbstractController
     /**
      * Connexion d'un utilisateur.
      */
-    #[Route('/login', name: 'app_authentification_login', methods: ['GET','POST'])]
+    #[Route('/login', name: 'app_authentification_login', methods: ['GET','POST','OPTIONS'])]
     #[OA\Tag(name: 'Users')]
     #[OA\Response(response: 200, description: 'Return user login')]
     #[OA\Response(response: 400, description: 'Invalid data')]
     public function login(Request $request, EntityManagerInterface $manager): JsonResponse
     {
+        if ($request->getMethod() === 'OPTIONS') {
+            return new JsonResponse(null, Response::HTTP_OK);
+        }        
+
         $data = json_decode($request->getContent(), true);
 
         $user = $manager->getRepository(User::class)->findOneBy(['email' => $data['email']]);

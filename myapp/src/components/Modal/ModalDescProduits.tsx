@@ -21,7 +21,7 @@ const ModalForm: React.FC<ModalDescProduit> = ({ isOpen, handleOpen }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/products");
+        const response = await axios.get("https://localhost:8000/api/products");
         setProducts(response.data);
         console.log(response.data);
       } catch (error) {

@@ -19,12 +19,12 @@ export default function Login() {
     e.preventDefault();
     console.log(formData);
     axios
-      .post("http://localhost:8000/api/login", formData)
+      .post("https://localhost:8000/api/login", formData)
       .then((response) => {
         if (response) {
           alert("Login success:" + response);
           console.log("Login success:" + response);
-          localStorage.setItem("authUser", response.data);
+          localStorage.setItem("token", response.data);
           if (formData.password === "admin") {
             window.location.href = "/Dashboard";
           }
@@ -33,18 +33,19 @@ export default function Login() {
       })
       .catch((error) => {
         if (error.response) {
-          console.error("Login failed:", error.response);
-          const errorMessage = "Erreur: " + error.response.data.message;
+          const errorMessage =
+            "Erreur: " + error.response.data.message || "Erreur inconnue.";
           alert(errorMessage);
+          console.error("Login failed:", error.response);
         } else if (error.request) {
-          console.error("Login failed:", error.request);
           const errorMessage =
             "Erreur: La requête a été faite mais aucune réponse n'a été reçue.";
           alert(errorMessage);
+          console.error("Login failed:", error.request);
         } else {
-          console.error("Login failed:", error.message);
-          const errorMessage = "Erreur: " + error.message;
+          const errorMessage = "Erreur: " + error.message || "Erreur inconnue.";
           alert(errorMessage);
+          console.error("Login failed:", error);
         }
       });
   };

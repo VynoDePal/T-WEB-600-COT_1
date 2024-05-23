@@ -23,7 +23,7 @@ export default function Card() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/products");
+        const response = await axios.get("https://localhost:8000/api/products");
         setProducts(response.data);
         console.log(response.data);
       } catch (error) {
@@ -37,7 +37,7 @@ export default function Card() {
   const addToCart = async (productId: number) => {
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/carts/${productId}`
+        `https://localhost:8000/api/carts/${productId}`
       );
       console.log(productId);
       // if (response.status === 201) {

@@ -12,7 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.1",
         "easycorp/easyadmin-bundle": "^4.10",
-        "lexik/jwt-authentication-bundle": "^3.0",
+        "lexik/jwt-authentication-bundle": "^2.21",
         "nelmio/api-doc-bundle": "^4.26",
         "nelmio/cors-bundle": "^2.4",
         "phpdocumentor/reflection-docblock": "^5.4",

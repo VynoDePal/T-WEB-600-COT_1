@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 interface ModalFormProduit {
   isOpen: boolean;
@@ -9,8 +10,8 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    photo: "",
-    prix: "",
+    photoName: "",
+    price: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,10 +22,15 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formData);
-    handleOpen(false);
+    try {
+      await axios.post('https://localhost:8000/api/products', formData); 
+      console.log("Produit ajouté avec succès");
+      handleOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du produit:", error);
+    }
   };
 
   return (
@@ -96,10 +102,10 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
                           </label>
                           <input
                             type="file"
-                            id="img"
-                            name="img"
+                            id="photoName"
+                            name="photoName"
                             accept="image/*"
-                            value={formData.photo}
+                            value={formData.photoName}
                             onChange={handleChange}
                             className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                             style={{ width: "400px" }}
@@ -114,9 +120,9 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
                           </label>
                           <input
                             type="number"
-                            id="prix"
-                            name="prix"
-                            value={formData.prix}
+                            id="price"
+                            name="price"
+                            value={formData.price}
                             onChange={handleChange}
                             className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                             style={{ width: "400px" }}

@@ -14,7 +14,7 @@ export interface Product {
 const handleUpdate = async (id: number) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/api/products/${id}`
+      `https://localhost:8000/api/products/${id}`
     );
     console.log(response.data);
   } catch (error) {
@@ -24,7 +24,7 @@ const handleUpdate = async (id: number) => {
 
 const handleDelete = async (id: number) => {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/products/${id}`, {
+    const response = await fetch(`https://localhost:8000/api/products/${id}`, {
       method: "DELETE",
     });
 
