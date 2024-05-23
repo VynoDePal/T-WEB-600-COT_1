@@ -22,9 +22,9 @@ export default function Login() {
       .post("https://localhost:8000/api/login", formData)
       .then((response) => {
         if (response) {
-          alert("Login success:" + response);
-          console.log("Login success:" + response);
-          localStorage.setItem("token", response.data);
+          alert("Login success:" + response.data);
+          console.log("Login success:" + response.data);
+          localStorage.setItem("authUser", response.data);
           if (formData.password === "admin") {
             window.location.href = "/Dashboard";
           }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { alert } from "@material-tailwind/react";
 
 interface ModalFormProduit {
   isOpen: boolean;
@@ -24,8 +25,13 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const authUser = localStorage.getItem('authUser');
     try {
-      await axios.post('https://localhost:8000/api/products', formData); 
+      console.log(authUser);
+      const headers = {
+        Authorization: `Bearer ${authUser}`,
+      };
+      await axios.post('https://localhost:8000/api/products', formData, { headers });
       console.log("Produit ajouté avec succès");
       handleOpen(false);
     } catch (error) {
