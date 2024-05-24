@@ -15,39 +15,43 @@ export default function Login() {
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formData);
-    axios
-      .post("https://localhost:8000/api/login", formData)
-      .then((response) => {
-        if (response) {
-          alert("Login success:" + response.data);
-          console.log("Login success:" + response.data);
-          localStorage.setItem("authUser", response.data);
-          if (formData.password === "admin") {
-            window.location.href = "/Dashboard";
-          }
+    try {
+      const response = await axios.post("https://localhost:8000/api/login", formData);
+      if (response.data.token) {
+        localStorage.setItem("authUser", response.data.token);
+        alert("Login success");
+        console.log("Login success:", response.data);
+        if (formData.password === "admin") {
+          window.location.href = "/Dashboard";
+        } else {
+          window.location.href = "/";
         }
-        window.location.href = "/";
-      })
-      .catch((error) => {
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Gérer les erreurs Axios
         if (error.response) {
-          const errorMessage =
-            "Erreur: " + error.response.data.message || "Erreur inconnue.";
+          const errorMessage = "Erreur: " + (error.response.data.message || "Erreur inconnue.");
           alert(errorMessage);
           console.error("Login failed:", error.response);
         } else if (error.request) {
-          const errorMessage =
-            "Erreur: La requête a été faite mais aucune réponse n'a été reçue.";
+          const errorMessage = "Erreur: La requête a été faite mais aucune réponse n'a été reçue.";
           alert(errorMessage);
           console.error("Login failed:", error.request);
         } else {
-          const errorMessage = "Erreur: " + error.message || "Erreur inconnue.";
+          const errorMessage = "Erreur: " + (error.message || "Erreur inconnue.");
           alert(errorMessage);
-          console.error("Login failed:", error);
+          console.error("Login failed:", error.message);
         }
-      });
+      } else {
+        // Gérer d'autres types d'erreurs
+        const errorMessage = "Erreur inconnue.";
+        alert(errorMessage);
+        console.error("Login failed:", error);
+      }
+    }
   };
 
   return (

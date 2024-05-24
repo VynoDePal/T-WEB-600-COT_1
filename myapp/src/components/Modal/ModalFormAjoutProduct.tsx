@@ -13,13 +13,14 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
     description: "",
     photoName: "",
     price: "",
+    isAvailable: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: value,
+      [name]: value === "true" ? true : value === "false" ? false : value,
     }));
   };
 
@@ -27,6 +28,9 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
     e.preventDefault();
     const authUser = localStorage.getItem('authUser');
     try {
+      if (!authUser) {
+        throw new Error("User not authenticated");
+      }
       console.log(authUser);
       const headers = {
         Authorization: `Bearer ${authUser}`,
@@ -134,6 +138,22 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
                             style={{ width: "400px" }}
                           />
                         </div>
+                        <div className="mb-4 flex items-center">
+                          <label
+                            htmlFor="isAvailable"
+                            className="block mb-2 text-sm text-gray-800 mr-2"
+                          >
+                            Disponibilité du produit
+                          </label>
+                          <input
+                            type="checkbox"
+                            id="isAvailable"
+                            name="isAvailable"
+                            value={formData.isAvailable.toString()}
+                            onChange={handleChange}
+                            className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out rounded-md focus:border-blue-600 focus:ring-blue-600"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -156,7 +176,7 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
               </form>
             </div>
           </div>
-        </div>
+       </div>
       )}
     </div>
   );
