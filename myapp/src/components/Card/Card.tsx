@@ -118,7 +118,7 @@ export default function Card() {
           </div>
         ))}
       </div>
-      {/* <ModalForm isOpen={modalOpen} handleOpen={setModalOpen} /> */}
+      <ModalForm isOpen={modalOpen} handleOpen={setModalOpen} />
     </div>
   );
 }

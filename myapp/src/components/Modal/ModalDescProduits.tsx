@@ -63,10 +63,10 @@ const ModalForm: React.FC<ModalDescProduit> = ({ isOpen, handleOpen }) => {
                     {products[0]?.name}
                   </h2>
                   <p className="text-black font-bold mb-5">
-                    {products[0]?.price} F CFA
+                    {products[0]?.price}
                   </p>
                   <p className="text-green-600 mb-2">
-                    {"Disponible" ? products[0]?.isAvailable : "Pas disponible"}
+                    {products[0]?.isAvailable ? "Disponible" : "Pas disponible"}
                   </p>
                   <div className="flex mb-2">
                     <span>☆</span>
@@ -79,8 +79,8 @@ const ModalForm: React.FC<ModalDescProduit> = ({ isOpen, handleOpen }) => {
                     Description du produit
                   </h2>
                   <p>{products[0]?.description}</p>
-                  <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 mt-10">
-                    Ajouter au panier
+                  <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 mt-10" onClick={() => {handleOpen(false);}}>
+                    Fermer
                   </button>
                 </div>
               </div>
