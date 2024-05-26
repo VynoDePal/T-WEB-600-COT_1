@@ -58,6 +58,7 @@ class SessionController extends AbstractController
     #[OA\Response(response: 201, description: 'Item added to cart')]
     #[OA\Response(response: 401, description: 'Unauthorized')]
     #[OA\Response(response: 404, description: 'Product or cart not found')]
+    // #[Security(name: "Bearer")]
     public function addItemToShoppingCart(Request $request, int $id): Response
     {
         // Utilisation du service pour obtenir l'utilisateur
