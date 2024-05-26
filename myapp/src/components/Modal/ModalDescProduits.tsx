@@ -63,7 +63,7 @@ const ModalForm: React.FC<ModalDescProduit> = ({ isOpen, handleOpen }) => {
                     {products[0]?.name}
                   </h2>
                   <p className="text-black font-bold mb-5">
-                    {products[0]?.price}
+                    {products[0]?.price} F CFA
                   </p>
                   <p className="text-green-600 mb-2">
                     {"Disponible" ? products[0]?.isAvailable : "Pas disponible"}

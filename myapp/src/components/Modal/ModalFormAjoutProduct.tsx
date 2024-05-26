@@ -31,7 +31,7 @@ const ModalForm: React.FC<ModalFormProduit> = ({ isOpen, handleOpen }) => {
       if (!authUser) {
         throw new Error("User not authenticated");
       }
-      console.log(authUser);
+      // console.log(authUser);
       const headers = {
         Authorization: `Bearer ${authUser}`,
       };

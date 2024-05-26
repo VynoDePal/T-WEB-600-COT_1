@@ -9,7 +9,6 @@ interface RegisterFormData {
   identifiant: string;
   email: string;
   password: string;
-  confirmPassword: string;
 }
 
 export default function Register() {
@@ -20,47 +19,41 @@ export default function Register() {
     identifiant: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   // ici il y a la fonction pour gérer la liaison entre le front et le back.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formData);
-
-    if (formData.password !== formData.confirmPassword) {
-      alert("Les mots de passe ne correspondent pas.");
-      return;
-    }
+    // console.log(formData);
 
     const dataToSend = {
       firstname: formData.firstname,
       lastname: formData.lastname,
       login: formData.identifiant,
       email: formData.email,
-      password: { first: formData.password, second: formData.confirmPassword },
+      password: formData.password,
     };
 
     axios
-      .post("http://localhost:8000/api/register", dataToSend)
+      .post("https://localhost:8000/api/register", dataToSend)
       .then((response) => {
-        alert("Registration success:");
+        alert("Registration success");
         window.location.href = "./Login";
       })
       .catch((error) => {
         if (error.response) {
-          console.error("Login failed:", error.response);
           const errorMessage = "Erreur: " + error.response.data.message;
           alert(errorMessage);
+          console.error("Login failed:", error.response);
         } else if (error.request) {
-          console.error("Login failed:", error.request);
           const errorMessage =
             "Erreur: La requête a été faite mais aucune réponse n'a été reçue.";
           alert(errorMessage);
+          console.error("Login failed:", error.request);
         } else {
-          console.error("Login failed:", error.message);
           const errorMessage = "Erreur: " + error.message;
           alert(errorMessage);
+          console.error("Login failed:", error.message);
         }
       });
   };
@@ -172,24 +165,6 @@ export default function Register() {
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
-                }
-                className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-              />
-            </div>
-            <div className="mb-6">
-              <label
-                htmlFor="confirm_password"
-                className="block mb-2 text-sm text-gray-800"
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirm_password"
-                name="confirm_password"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  setFormData({ ...formData, confirmPassword: e.target.value })
                 }
                 className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
               />

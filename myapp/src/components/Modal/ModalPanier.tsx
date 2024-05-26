@@ -54,7 +54,7 @@ export default function ModalPanier({ isOpen, onClose }: ModalPanierProps) {
             <div key={product.id} className="mb-4">
               <p>{product.name}</p>
               <p>
-                {product.price}€ x {product.quantity}
+                {product.price}F CFA x {product.quantity}
               </p>
               <button
                 onClick={() => removeFromCart(product.id)}
@@ -72,7 +72,7 @@ export default function ModalPanier({ isOpen, onClose }: ModalPanierProps) {
               (total, product) => total + product.price * product.quantity,
               0
             )}
-            €
+            F CFA
           </p>
         </div>
         <button
